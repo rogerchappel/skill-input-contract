@@ -10,6 +10,16 @@ npm run smoke
 node src/cli.js fixtures/task-brief.md --format json
 ```
 
+## Release Verification
+
+Run the full release gate before tagging or publishing:
+
+```bash
+npm run release:check
+```
+
+The release gate runs syntax checks, tests, the fixture-backed CLI smoke, and a dry-run `npm pack` so shipped files can be reviewed before publication.
+
 ## CLI
 
 ```bash
