@@ -1,0 +1,10 @@
+{
+  "title": "Prepare launch post",
+  "outcome": "Draft a launch post and identify missing approvals.",
+  "inputs": ["Repository path", "Audience"],
+  "constraints": ["Do not publish without approval"],
+  "requestedActions": ["Write a draft", "Prepare a publish plan"],
+  "sideEffects": ["Prepare a publish plan"],
+  "approvalsRequired": ["Do not publish without approval"],
+  "verification": ["Review generated Markdown"]
+}
