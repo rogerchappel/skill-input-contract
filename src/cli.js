@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { loadTaskBrief, renderMarkdown, toJsonReport, validateContract } from './index.js';
+import fs from 'node:fs';
 
 const args = process.argv.slice(2);
 const file = args.find(arg => !arg.startsWith('-'));
 const format = valueAfter(args, '--format') || 'json';
+const output = valueAfter(args, '--output');
 if (!file || args.includes('--help')) {
   console.log('Usage: skill-input-contract <brief.md|brief.json> [--format json|markdown]');
   process.exit(file ? 0 : 1);
@@ -12,8 +14,11 @@ if (!file || args.includes('--help')) {
 try {
   const contract = loadTaskBrief(file);
   const validation = validateContract(contract);
-  if (format === 'markdown') console.log(renderMarkdown(contract, validation));
-  else console.log(JSON.stringify(toJsonReport(contract), null, 2));
+  const report = format === 'markdown'
+    ? renderMarkdown(contract, validation)
+    : JSON.stringify(toJsonReport(contract), null, 2);
+  if (output) fs.writeFileSync(output, `${report}\n`);
+  else console.log(report);
   process.exit(validation.status === 'fail' ? 2 : 0);
 } catch (error) {
   console.error(`skill-input-contract: ${error.message}`);
