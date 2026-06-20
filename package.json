@@ -3,27 +3,29 @@
   "version": "0.1.0",
   "description": "Generate machine-checkable input contracts for reusable agent skills.",
   "type": "module",
-  "bin": { "skill-input-contract": "./src/cli.js" },
+  "bin": {
+    "skill-input-contract": "./src/cli.js"
+  },
   "scripts": {
     "test": "node --test",
     "check": "node --check src/index.js && node --check src/cli.js",
     "smoke": "node src/cli.js fixtures/task-brief.md --format markdown",
     "build": "npm run check && npm test",
     "package:smoke": "npm pack --dry-run",
-    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
+    "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke"
   },
-  "keywords": ["agent", "skill", "contract", "validation", "cli"],
+  "keywords": [
+    "agent",
+    "skill",
+    "contract",
+    "validation",
+    "cli"
+  ],
   "author": "Roger Chappel",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rogerchappel/skill-input-contract.git"
+  "engines": {
+    "node": ">=20"
   },
-  "bugs": {
-    "url": "https://github.com/rogerchappel/skill-input-contract/issues"
-  },
-  "homepage": "https://github.com/rogerchappel/skill-input-contract#readme",
-  "engines": { "node": ">=20" },
   "files": [
     "src",
     "docs",
@@ -34,5 +36,13 @@
     "LICENSE",
     "CHANGELOG.md",
     "CONTRIBUTING.md"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/skill-input-contract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/skill-input-contract/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/skill-input-contract#readme"
 }
