@@ -52,13 +52,25 @@ export function validateContract(contract) {
   return { status, findings };
 }
 
+export function scoreContract(contract) {
+  const validation = validateContract(contract);
+  const base = validation.status === 'pass' ? 100 : validation.status === 'warn' ? 75 : 45;
+  const coverage = [
+    contract.inputs.length > 0,
+    contract.constraints.length > 0,
+    contract.requestedActions.length > 0,
+    contract.verification.length > 0
+  ].filter(Boolean).length * 5;
+  return Math.min(100, base + coverage);
+}
+
 export function renderMarkdown(contract, validation = validateContract(contract)) {
   const line = (items, empty = '- None listed') => items.length ? items.map(item => `- ${item}`).join('\n') : empty;
   return `# ${contract.title}\n\nStatus: ${validation.status}\n\n## Outcome\n\n${contract.outcome}\n\n## Inputs\n\n${line(contract.inputs)}\n\n## Constraints\n\n${line(contract.constraints)}\n\n## Side Effects\n\n${line(contract.sideEffects)}\n\n## Approval Requirements\n\n${line(contract.approvalsRequired)}\n\n## Verification\n\n${line(contract.verification)}\n\n## Findings\n\n${validation.findings.length ? validation.findings.map(f => `- ${f.level}: ${f.code} - ${f.message}`).join('\n') : '- pass: contract is ready for agent use'}\n`;
 }
 
 export function toJsonReport(contract) {
-  return { contract, validation: validateContract(contract) };
+  return { contract, validation: validateContract(contract), score: scoreContract(contract) };
 }
 
 function splitSections(text) {
