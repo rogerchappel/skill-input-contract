@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTaskBrief, validateContract, renderMarkdown } from '../src/index.js';
+import { parseTaskBrief, validateContract, renderMarkdown, scoreContract, toJsonReport } from '../src/index.js';
 import fs from 'node:fs';
 
 test('extracts inputs, verification, side effects, and approvals', () => {
@@ -25,4 +25,10 @@ test('renders markdown report', () => {
   const report = renderMarkdown(contract);
   assert.match(report, /## Outcome/);
   assert.match(report, /Task brief/);
+});
+
+test('includes a bounded readiness score in JSON reports', () => {
+  const contract = parseTaskBrief(fs.readFileSync('fixtures/task-brief.md', 'utf8'), 'fixtures/task-brief.md');
+  assert.equal(scoreContract(contract), 100);
+  assert.equal(toJsonReport(contract).score, 100);
 });
