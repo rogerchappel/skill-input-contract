@@ -10,6 +10,8 @@ Initial public build with parser, validator, CLI, fixtures, tests, and skill doc
 - `npm run check`
 - `npm run smoke`
 - `npm run build`
+- `npm run package:smoke`
+- `npm run release:check`
 
 ## Known Limits
 
