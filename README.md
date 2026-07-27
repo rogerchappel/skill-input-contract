@@ -32,6 +32,8 @@ The command exits with `2` when the contract has blocking findings, making it su
 
 This package reads local files and writes reports to stdout only. It does not send messages, post content, change repositories, or request approvals on your behalf.
 
+Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified writes are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
+
 ## Limitations
 
 Markdown parsing is deterministic and section-name based. For unusual templates, prefer JSON input or add a fixture before relying on the result.
