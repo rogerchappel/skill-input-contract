@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 
-const SIDE_EFFECT_WORDS = ['send', 'post', 'publish', 'delete', 'write', 'push', 'merge', 'email', 'notify', 'upload'];
+const EXTERNAL_SIDE_EFFECT_WORDS = ['send', 'post', 'publish', 'delete', 'push', 'merge', 'email', 'notify', 'upload'];
+const DURABLE_WRITE_WORDS = ['write'];
+const LOCAL_ONLY_WRITE_PATTERNS = [
+  /\blocally\b/i,
+  /\blocal (?:file|report|output|artifact)s?\b/i,
+  /\b(?:stdout|standard output)\b/i
+];
 const APPROVAL_WORDS = ['approval', 'confirm', 'permission', 'authorize', 'consent'];
 
 export function parseTaskBrief(text, source = 'inline') {
@@ -106,7 +112,18 @@ function extractItems(lines) {
 }
 
 function detectSideEffects(items) {
-  return unique(items.filter(item => SIDE_EFFECT_WORDS.some(word => new RegExp(`\\b${word}\\b`, 'i').test(item))));
+  return unique(items.filter(item => {
+    const hasExternalAction = EXTERNAL_SIDE_EFFECT_WORDS.some(word => hasWord(item, word));
+    if (hasExternalAction) return true;
+
+    const hasDurableWrite = DURABLE_WRITE_WORDS.some(word => hasWord(item, word));
+    const isExplicitlyLocal = LOCAL_ONLY_WRITE_PATTERNS.some(pattern => pattern.test(item));
+    return hasDurableWrite && !isExplicitlyLocal;
+  }));
+}
+
+function hasWord(item, word) {
+  return new RegExp(`\\b${word}\\b`, 'i').test(item);
 }
 
 function collectQuestions(text, bullets) {
