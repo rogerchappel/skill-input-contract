@@ -23,8 +23,12 @@ The release gate runs syntax checks, tests, the fixture-backed CLI smoke, and a 
 ## CLI
 
 ```bash
-skill-input-contract <brief.md|brief.json> [--format json|markdown]
+skill-input-contract <brief.md|brief.json> [--format json|markdown] [--output <path>]
 ```
+
+Options may appear before or after the input file. Supported formats are `json`
+(the default) and `markdown`; invalid formats and missing option values exit with
+a usage error.
 
 The command exits with `2` when the contract has blocking findings, making it suitable for preflight scripts.
 
