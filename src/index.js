@@ -1,6 +1,17 @@
 import fs from 'node:fs';
 
-const EXTERNAL_SIDE_EFFECT_WORDS = ['send', 'post', 'publish', 'delete', 'push', 'merge', 'email', 'notify', 'upload'];
+const EXTERNAL_SIDE_EFFECT_PATTERNS = [
+  /\b(?:send|sends|sending|sent)\b/gi,
+  /\b(?:post|posts|posted|posting)\b/gi,
+  /\b(?:publish|publishes|published|publishing)\b/gi,
+  /\b(?:delete|deletes|deleted|deleting)\b/gi,
+  /\b(?:push|pushes|pushed|pushing)\b/gi,
+  /\b(?:merge|merges|merged|merging)\b/gi,
+  /\b(?:email|emails|emailed|emailing)\b/gi,
+  /\b(?:notify|notifies|notified|notifying)\b/gi,
+  /\b(?:upload|uploads|uploaded|uploading)\b/gi
+];
+const NEGATION_PATTERN = /\b(?:not|never|without|cannot|can't|do not|don't|does not|doesn't|did not|didn't)\b/i;
 const DURABLE_WRITE_WORDS = ['write'];
 const LOCAL_ONLY_WRITE_PATTERNS = [
   /\blocally\b/i,
@@ -113,13 +124,23 @@ function extractItems(lines) {
 
 function detectSideEffects(items) {
   return unique(items.filter(item => {
-    const hasExternalAction = EXTERNAL_SIDE_EFFECT_WORDS.some(word => hasWord(item, word));
+    const hasExternalAction = item
+      .split(/\b(?:but|however|yet)\b|[.;]/i)
+      .some(clause => EXTERNAL_SIDE_EFFECT_PATTERNS.some(pattern => hasAffirmativeMatch(clause, pattern)));
     if (hasExternalAction) return true;
 
     const hasDurableWrite = DURABLE_WRITE_WORDS.some(word => hasWord(item, word));
     const isExplicitlyLocal = LOCAL_ONLY_WRITE_PATTERNS.some(pattern => pattern.test(item));
     return hasDurableWrite && !isExplicitlyLocal;
   }));
+}
+
+function hasAffirmativeMatch(clause, pattern) {
+  pattern.lastIndex = 0;
+  for (const match of clause.matchAll(pattern)) {
+    if (!NEGATION_PATTERN.test(clause.slice(0, match.index))) return true;
+  }
+  return false;
 }
 
 function hasWord(item, word) {

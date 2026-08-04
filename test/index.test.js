@@ -8,7 +8,8 @@ test('extracts inputs, verification, side effects, and approvals', () => {
   assert.equal(contract.title, 'Publish Launch Notes');
   assert.ok(contract.inputs.includes('Repository path'));
   assert.ok(contract.verification.some(item => item.includes('links')));
-  assert.ok(contract.sideEffects.some(item => item.includes('send an email')));
+  assert.ok(contract.sideEffects.some(item => item.includes('Write a launch post draft')));
+  assert.ok(!contract.sideEffects.some(item => item.includes('do not send')));
   assert.ok(contract.approvalsRequired.some(item => item.includes('approval')));
   assert.equal(validateContract(contract).status, 'pass');
 });
