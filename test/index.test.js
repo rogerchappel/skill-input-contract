@@ -8,7 +8,8 @@ test('extracts inputs, verification, side effects, and approvals', () => {
   assert.equal(contract.title, 'Publish Launch Notes');
   assert.ok(contract.inputs.includes('Repository path'));
   assert.ok(contract.verification.some(item => item.includes('links')));
-  assert.ok(contract.sideEffects.some(item => item.includes('send an email')));
+  assert.ok(contract.sideEffects.some(item => item.includes('Write a launch post draft')));
+  assert.ok(!contract.sideEffects.some(item => item.includes('do not send')));
   assert.ok(contract.approvalsRequired.some(item => item.includes('approval')));
   assert.equal(validateContract(contract).status, 'pass');
 });
@@ -36,6 +37,58 @@ test('still classifies unqualified durable writes as side effects', () => {
 
   assert.deepEqual(contract.sideEffects, ['Write a report.']);
   assert.ok(result.findings.some(item => item.code === 'approval_gap'));
+});
+
+test('ignores external actions that are explicitly negated', () => {
+  const briefs = [
+    'Do not send the report.',
+    'Never publish the report.',
+    'Prepare the report without uploading it.',
+    'Do not send, post, or publish the report.'
+  ];
+
+  for (const outcome of briefs) {
+    const contract = parseTaskBrief(`# Local preparation\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect report`);
+    const result = validateContract(contract);
+
+    assert.deepEqual(contract.sideEffects, [], outcome);
+    assert.ok(!result.findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
+test('detects affirmative external actions and documented inflections', () => {
+  const actions = [
+    'Sends the report.',
+    'Posted the report.',
+    'Publishing the report.',
+    'Deleted the report.',
+    'Pushing the branch.',
+    'Merged the branch.',
+    'Emailed the report.',
+    'Notifying the team.',
+    'Uploaded the report.'
+  ];
+
+  for (const outcome of actions) {
+    const contract = parseTaskBrief(`# External action\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect result`);
+    assert.deepEqual(contract.sideEffects, [outcome], outcome);
+    assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
+test('retains an affirmative external action alongside a negated action', () => {
+  const outcome = 'Do not send the draft, but publish the approved report.';
+  const contract = parseTaskBrief(`# Mixed actions\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect publication`);
+
+  assert.deepEqual(contract.sideEffects, [outcome]);
+  assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'));
+});
+
+test('does not match external action names as substrings', () => {
+  const outcome = 'Prepare an emailer and a publisher summary.';
+  const contract = parseTaskBrief(`# Local tools\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect summary`);
+
+  assert.deepEqual(contract.sideEffects, []);
 });
 
 test('renders markdown report', () => {
