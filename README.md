@@ -38,6 +38,13 @@ This package reads local files and writes reports to stdout only. It does not se
 
 Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified writes are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
 
+Explicitly prohibited actions are not side effects: for example, `do not send`,
+`never publish`, and `without uploading` describe boundaries rather than requested
+external work. Negation applies within its clause; if the same item also contains
+an affirmative action after `but`, `however`, or `yet`, that action is still
+reported and requires approval. Common tense and participle forms are recognized
+as whole words, so `uploaded` is detected while a name such as `uploader` is not.
+
 ## Limitations
 
 Markdown parsing is deterministic and section-name based. For unusual templates, prefer JSON input or add a fixture before relying on the result.
