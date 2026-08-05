@@ -41,9 +41,12 @@ Contract validation treats send, publish, upload, and similar actions as externa
 Explicitly prohibited actions are not side effects: for example, `do not send`,
 `never publish`, and `without uploading` describe boundaries rather than requested
 external work. Negation applies within its clause; if the same item also contains
-an affirmative action after `but`, `however`, or `yet`, that action is still
-reported and requires approval. Common tense and participle forms are recognized
-as whole words, so `uploaded` is detected while a name such as `uploader` is not.
+an affirmative action after `but`, `however`, or `yet`, or after a comma-delimited
+`then` or `subsequently` transition, that action is still reported and requires
+approval. Coordinated actions without a new clause retain their shared negation,
+so `Do not send the draft or publish it` remains a boundary rather than a side
+effect. Common tense and participle forms are recognized as whole words, so
+`uploaded` is detected while a name such as `uploader` is not.
 
 ## Limitations
 
