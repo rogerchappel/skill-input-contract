@@ -12,6 +12,7 @@ const EXTERNAL_SIDE_EFFECT_PATTERNS = [
   /\b(?:upload|uploads|uploaded|uploading)\b/gi
 ];
 const NEGATION_PATTERN = /\b(?:not|never|without|cannot|can't|do not|don't|does not|doesn't|did not|didn't)\b/i;
+const ACTION_CLAUSE_SPLIT_PATTERN = /\b(?:but|however|yet)\b|,\s*(?=(?:then|subsequently)\b)|[.;]/i;
 const DURABLE_WRITE_WORDS = ['write'];
 const LOCAL_ONLY_WRITE_PATTERNS = [
   /\blocally\b/i,
@@ -125,7 +126,7 @@ function extractItems(lines) {
 function detectSideEffects(items) {
   return unique(items.filter(item => {
     const hasExternalAction = item
-      .split(/\b(?:but|however|yet)\b|[.;]/i)
+      .split(ACTION_CLAUSE_SPLIT_PATTERN)
       .some(clause => EXTERNAL_SIDE_EFFECT_PATTERNS.some(pattern => hasAffirmativeMatch(clause, pattern)));
     if (hasExternalAction) return true;
 
