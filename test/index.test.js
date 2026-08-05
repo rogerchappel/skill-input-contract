@@ -84,6 +84,30 @@ test('retains an affirmative external action alongside a negated action', () => 
   assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'));
 });
 
+test('detects affirmative external actions after negated sequence steps', () => {
+  const outcomes = [
+    'Do not send the draft, then publish the report.',
+    'Never upload a draft, subsequently email the final report.'
+  ];
+
+  for (const outcome of outcomes) {
+    const contract = parseTaskBrief(`# Sequenced actions\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect result`);
+    const result = validateContract(contract);
+
+    assert.deepEqual(contract.sideEffects, [outcome], outcome);
+    assert.ok(result.findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
+test('keeps shared-negation conjunctions non-side-effects', () => {
+  const outcome = 'Do not send the draft or publish it.';
+  const contract = parseTaskBrief(`# Local preparation\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect draft`);
+  const result = validateContract(contract);
+
+  assert.deepEqual(contract.sideEffects, []);
+  assert.ok(!result.findings.some(item => item.code === 'approval_gap'));
+});
+
 test('does not match external action names as substrings', () => {
   const outcome = 'Prepare an emailer and a publisher summary.';
   const contract = parseTaskBrief(`# Local tools\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect summary`);
