@@ -22,6 +22,39 @@ test('fails when side effects lack approvals', () => {
   assert.ok(result.findings.some(item => item.code === 'approval_gap'));
 });
 
+test('does not treat denied approval language as a requirement', () => {
+  const constraints = [
+    'No approval is required',
+    'Publish without approval',
+    'Approval is not required'
+  ];
+
+  for (const constraint of constraints) {
+    const contract = parseTaskBrief(`# Publish report\n\n## Outcome\n\nPublish the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- ${constraint}\n\n## Verification\n\n- inspect publication`);
+    const result = validateContract(contract);
+
+    assert.deepEqual(contract.approvalsRequired, [], constraint);
+    assert.equal(result.status, 'fail', constraint);
+    assert.ok(result.findings.some(item => item.code === 'approval_gap'), constraint);
+  }
+});
+
+test('extracts affirmative approval and confirmation requirements', () => {
+  const constraints = [
+    'Approval is required before publishing',
+    'Ask for confirmation before publishing',
+    'Local-only until approval is granted',
+    'Do not publish without approval'
+  ];
+
+  for (const constraint of constraints) {
+    const contract = parseTaskBrief(`# Publish report\n\n## Outcome\n\nPublish the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- ${constraint}\n\n## Verification\n\n- inspect publication`);
+
+    assert.deepEqual(contract.approvalsRequired, [constraint], constraint);
+    assert.equal(validateContract(contract).status, 'pass', constraint);
+  }
+});
+
 test('allows explicitly local report writes without an approval requirement', () => {
   const contract = parseTaskBrief('# Local report\n\n## Outcome\n\nWrite a report locally.\n\n## Inputs\n\n- source file\n\n## Constraints\n\n- Do not access external systems\n\n## Verification\n\n- inspect report');
   const result = validateContract(contract);
