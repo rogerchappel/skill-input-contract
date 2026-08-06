@@ -38,6 +38,12 @@ This package reads local files and writes reports to stdout only. It does not se
 
 Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified writes are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
 
+Only affirmative requirements satisfy that gate. Constraints such as `approval
+is required`, `ask for confirmation`, and `until approval is granted` are
+recognized; denials such as `no approval is required`, `approval is not needed`,
+or an instruction to act `without approval` leave an approval gap. A prohibition
+such as `do not publish without approval` still states an approval requirement.
+
 Explicitly prohibited actions are not side effects: for example, `do not send`,
 `never publish`, and `without uploading` describe boundaries rather than requested
 external work. Negation applies within its clause; if the same item also contains
