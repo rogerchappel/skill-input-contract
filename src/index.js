@@ -19,7 +19,17 @@ const LOCAL_ONLY_WRITE_PATTERNS = [
   /\blocal (?:file|report|output|artifact)s?\b/i,
   /\b(?:stdout|standard output)\b/i
 ];
-const APPROVAL_WORDS = ['approval', 'confirm', 'permission', 'authorize', 'consent'];
+const APPROVAL_TERM = String.raw`(?:approval|confirmation|permission|authoriz(?:e|ation)|consent)`;
+const APPROVAL_PATTERN = new RegExp(`\\b${APPROVAL_TERM}\\b`, 'i');
+const DENIED_APPROVAL_PATTERNS = [
+  new RegExp(`\\bno(?:\\s+\\w+){0,3}\\s+${APPROVAL_TERM}\\b`, 'i'),
+  new RegExp(`\\b${APPROVAL_TERM}\\b(?:\\s+\\w+){0,3}\\s+(?:not|never)\\s+(?:required|needed|necessary)\\b`, 'i'),
+  new RegExp(`\\bwithout\\s+(?:any\\s+)?${APPROVAL_TERM}\\b`, 'i')
+];
+const NEGATED_WITHOUT_APPROVAL_PATTERN = new RegExp(
+  `\\b(?:do not|don't|never)\\b[^.;]*\\bwithout\\s+(?:any\\s+)?${APPROVAL_TERM}\\b`,
+  'i'
+);
 
 export function parseTaskBrief(text, source = 'inline') {
   const normalized = String(text || '').replace(/\r\n/g, '\n');
@@ -36,7 +46,7 @@ export function parseTaskBrief(text, source = 'inline') {
   const verification = collectNamed(sections, ['verification', 'checks', 'done', 'acceptance criteria']);
   const openQuestions = collectQuestions(normalized, allBullets);
   const sideEffects = detectSideEffects([...requestedActions, ...allBullets, outcome]);
-  const approvals = constraints.filter(item => APPROVAL_WORDS.some(word => item.toLowerCase().includes(word)));
+  const approvals = constraints.filter(isApprovalRequirement);
 
   return normalizeContract({
     source,
@@ -146,6 +156,12 @@ function hasAffirmativeMatch(clause, pattern) {
 
 function hasWord(item, word) {
   return new RegExp(`\\b${word}\\b`, 'i').test(item);
+}
+
+function isApprovalRequirement(item) {
+  if (!APPROVAL_PATTERN.test(item)) return false;
+  if (NEGATED_WITHOUT_APPROVAL_PATTERN.test(item)) return true;
+  return !DENIED_APPROVAL_PATTERNS.some(pattern => pattern.test(item));
 }
 
 function collectQuestions(text, bullets) {

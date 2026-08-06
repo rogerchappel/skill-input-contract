@@ -62,3 +62,20 @@ test('preserves validation failure exit code', () => {
   assert.equal(result.status, 2);
   assert.equal(JSON.parse(result.stdout).validation.status, 'fail');
 });
+
+test('exits with an approval gap when approval wording is denied', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const brief = path.join(directory, 'denied-approval.md');
+  try {
+    fs.writeFileSync(brief, '# Publish report\n\n## Outcome\n\nPublish the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- No approval is required\n\n## Verification\n\n- inspect publication\n');
+    const result = run([brief, '--format', 'json']);
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 2);
+    assert.deepEqual(report.contract.approvalsRequired, []);
+    assert.equal(report.validation.status, 'fail');
+    assert.ok(report.validation.findings.some(item => item.code === 'approval_gap'));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});

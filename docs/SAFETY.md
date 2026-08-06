@@ -7,6 +7,12 @@
 - No clear outcome
 - External side effects without an approval requirement
 
+Approval-related words alone do not satisfy the requirement. The constraint must
+affirmatively require approval, confirmation, permission, authorization, or
+consent. For example, `approval is required` and `ask for confirmation` satisfy
+the gate, while `no approval is required` and `publish without approval` do not.
+The latter forms produce an `approval_gap` when an external side effect exists.
+
 ## Negated Actions
 
 An explicit prohibition such as `do not send`, `never publish`, or `without
