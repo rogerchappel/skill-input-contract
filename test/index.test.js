@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseTaskBrief, validateContract, renderMarkdown, scoreContract, toJsonReport } from '../src/index.js';
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 test('extracts inputs, verification, side effects, and approvals', () => {
   const contract = parseTaskBrief(fs.readFileSync('fixtures/task-brief.md', 'utf8'), 'fixtures/task-brief.md');
@@ -139,6 +140,28 @@ test('keeps shared-negation conjunctions non-side-effects', () => {
 
   assert.deepEqual(contract.sideEffects, []);
   assert.ok(!result.findings.some(item => item.code === 'approval_gap'));
+});
+
+test('scopes a leading participial negation before an affirmative action', () => {
+  const outcome = 'Without uploading the draft, publish the final report.';
+  const contract = parseTaskBrief(`# Publish final report\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- final report\n\n## Verification\n\n- inspect publication`);
+  const result = validateContract(contract);
+
+  assert.deepEqual(contract.sideEffects, [outcome]);
+  assert.equal(result.status, 'fail');
+  assert.ok(result.findings.some(item => item.code === 'approval_gap'));
+});
+
+test('CLI rejects an affirmative action after a leading participial negation', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/participial-negation.md'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.deepEqual(report.contract.sideEffects, ['Without uploading the draft, publish the final report.']);
+  assert.ok(report.validation.findings.some(item => item.code === 'approval_gap'));
 });
 
 test('does not match external action names as substrings', () => {
