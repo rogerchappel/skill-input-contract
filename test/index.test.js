@@ -73,6 +73,73 @@ test('still classifies unqualified durable writes as side effects', () => {
   assert.ok(result.findings.some(item => item.code === 'approval_gap'));
 });
 
+test('classifies common durable-write inflections as whole-word side effects', () => {
+  const outcomes = [
+    'Write a report.',
+    'Writes a report.',
+    'Writing a report.',
+    'Wrote a report.',
+    'Written a report.'
+  ];
+
+  for (const outcome of outcomes) {
+    const contract = parseTaskBrief(`# Persist report\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect report`);
+
+    assert.deepEqual(contract.sideEffects, [outcome], outcome);
+    assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
+test('keeps local-only and negated durable-write inflections out of side effects', () => {
+  const outcomes = [
+    'Writes a local report.',
+    'Writing to stdout.',
+    'Wrote the output locally.',
+    'Never written the report.',
+    'Do not write the report.',
+    'Did not write the report.'
+  ];
+
+  for (const outcome of outcomes) {
+    const contract = parseTaskBrief(`# Local report\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect report`);
+
+    assert.deepEqual(contract.sideEffects, [], outcome);
+    assert.ok(!validateContract(contract).findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
+test('retains an affirmative durable write alongside a negated write', () => {
+  const outcome = 'Do not write the draft, but write the final report.';
+  const contract = parseTaskBrief(`# Persist final report\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect report`);
+
+  assert.deepEqual(contract.sideEffects, [outcome]);
+  assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'));
+});
+
+test('does not match durable-write names as substrings', () => {
+  const outcome = 'Configure a typewriter and ghostwriter.';
+  const contract = parseTaskBrief(`# Local tools\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect configuration`);
+
+  assert.deepEqual(contract.sideEffects, []);
+});
+
+test('CLI rejects durable-write inflections without approval', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/durable-write-inflections.md'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.deepEqual(report.contract.sideEffects, [
+    'Writes the summary.',
+    'Writing the audit record.',
+    'Wrote the manifest.',
+    'Written the release notes.'
+  ]);
+  assert.ok(report.validation.findings.some(item => item.code === 'approval_gap'));
+});
+
 test('ignores external actions that are explicitly negated', () => {
   const briefs = [
     'Do not send the report.',
