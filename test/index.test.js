@@ -56,6 +56,40 @@ test('extracts affirmative approval and confirmation requirements', () => {
   }
 });
 
+test('keeps approval guards separate from requested side effects', () => {
+  const contract = parseTaskBrief(fs.readFileSync('fixtures/approval-guard.md', 'utf8'), 'fixtures/approval-guard.md');
+
+  assert.deepEqual(contract.sideEffects, []);
+  assert.deepEqual(contract.approvalsRequired, [
+    'Ask for confirmation before publishing the draft',
+    'Approval is required before emailing the report'
+  ]);
+  assert.equal(validateContract(contract).status, 'pass');
+});
+
+test('retains requested actions alongside approval guards', () => {
+  const contract = parseTaskBrief(fs.readFileSync('fixtures/approval-guard-mixed.md', 'utf8'), 'fixtures/approval-guard-mixed.md');
+
+  assert.deepEqual(contract.sideEffects, [
+    'Ask for confirmation before publishing the draft, then send the approved report'
+  ]);
+  assert.deepEqual(contract.approvalsRequired, [
+    'Ask for confirmation before publishing the draft, then send the approved report'
+  ]);
+  assert.equal(validateContract(contract).status, 'pass');
+});
+
+test('CLI renders guard-only constraints as approval requirements, not side effects', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/approval-guard.md', '--format', 'markdown'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /## Side Effects\n\n- None listed/);
+  assert.match(result.stdout, /## Approval Requirements\n\n- Ask for confirmation before publishing the draft/);
+});
+
 test('allows explicitly local report writes without an approval requirement', () => {
   const contract = parseTaskBrief('# Local report\n\n## Outcome\n\nWrite a report locally.\n\n## Inputs\n\n- source file\n\n## Constraints\n\n- Do not access external systems\n\n## Verification\n\n- inspect report');
   const result = validateContract(contract);
