@@ -149,9 +149,16 @@ function detectSideEffects(items) {
 function hasAffirmativeMatch(clause, pattern) {
   pattern.lastIndex = 0;
   for (const match of clause.matchAll(pattern)) {
-    if (!NEGATION_PATTERN.test(clause.slice(0, match.index))) return true;
+    const prefix = clause.slice(0, match.index);
+    if (!NEGATION_PATTERN.test(prefix) && !isApprovalGuard(prefix)) return true;
   }
   return false;
+}
+
+function isApprovalGuard(prefix) {
+  const approval = prefix.match(APPROVAL_PATTERN);
+  if (!approval) return false;
+  return /\bbefore\b/i.test(prefix.slice(approval.index + approval[0].length));
 }
 
 function hasWord(item, word) {
