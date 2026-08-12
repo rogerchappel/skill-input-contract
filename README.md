@@ -36,7 +36,7 @@ The command exits with `2` when the contract has blocking findings, making it su
 
 This package reads local files and writes reports to stdout only. It does not send messages, post content, change repositories, or request approvals on your behalf.
 
-Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified writes are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
+Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified `write`, `writes`, `writing`, `wrote`, and `written` actions are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
 
 Only affirmative requirements satisfy that gate. Constraints such as `approval
 is required`, `ask for confirmation`, and `until approval is granted` are
@@ -54,7 +54,8 @@ approval. A leading `without` participial clause also ends at its comma, so
 publication. Coordinated actions without a new clause retain their shared
 negation, so `Do not send the draft or publish it` remains a boundary rather than
 a side effect. Common tense and participle forms are recognized as whole words, so
-`uploaded` is detected while a name such as `uploader` is not.
+`uploaded` and `written` are detected while names such as `uploader` and
+`ghostwriter` are not.
 
 ## Limitations
 
