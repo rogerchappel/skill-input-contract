@@ -22,9 +22,11 @@ introduced by `but`, `however`, or `yet` is evaluated independently, so “Do no
 send the draft, but publish the approved report” still requires approval for the
 publication.
 
-External action matching covers common inflections and uses whole-word
-boundaries. This keeps actions such as `sending`, `published`, and `uploaded`
-consistent without treating unrelated words such as `emailer` as actions.
+External action and durable-write matching cover common inflections and use
+whole-word boundaries. This keeps actions such as `sending`, `published`,
+`uploaded`, `writing`, and `written` consistent without treating unrelated words
+such as `emailer` or `ghostwriter` as actions. Explicitly local and negated write
+forms remain boundaries rather than requested side effects.
 
 ## Warning Conditions
 

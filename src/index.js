@@ -13,7 +13,7 @@ const EXTERNAL_SIDE_EFFECT_PATTERNS = [
 ];
 const NEGATION_PATTERN = /\b(?:not|never|without|cannot|can't|do not|don't|does not|doesn't|did not|didn't)\b/i;
 const ACTION_CLAUSE_SPLIT_PATTERN = /^\s*without\b[^,]*,\s*|\b(?:but|however|yet)\b|,\s*(?=(?:then|subsequently)\b)|[.;]/i;
-const DURABLE_WRITE_WORDS = ['write'];
+const DURABLE_WRITE_PATTERN = /\b(?:write|writes|writing|wrote|written)\b/gi;
 const LOCAL_ONLY_WRITE_PATTERNS = [
   /\blocally\b/i,
   /\blocal (?:file|report|output|artifact)s?\b/i,
@@ -140,7 +140,9 @@ function detectSideEffects(items) {
       .some(clause => EXTERNAL_SIDE_EFFECT_PATTERNS.some(pattern => hasAffirmativeMatch(clause, pattern)));
     if (hasExternalAction) return true;
 
-    const hasDurableWrite = DURABLE_WRITE_WORDS.some(word => hasWord(item, word));
+    const hasDurableWrite = item
+      .split(ACTION_CLAUSE_SPLIT_PATTERN)
+      .some(clause => hasAffirmativeMatch(clause, DURABLE_WRITE_PATTERN));
     const isExplicitlyLocal = LOCAL_ONLY_WRITE_PATTERNS.some(pattern => pattern.test(item));
     return hasDurableWrite && !isExplicitlyLocal;
   }));
