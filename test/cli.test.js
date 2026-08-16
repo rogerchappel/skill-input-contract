@@ -57,6 +57,43 @@ test('rejects missing option values with a usage error', () => {
   }
 });
 
+test('rejects duplicate format options before reading the input', () => {
+  const missingFixture = path.resolve('fixtures/does-not-exist.md');
+  for (const args of [
+    ['--format', 'json', '--format', 'markdown', missingFixture],
+    [missingFixture, '--format', 'json', '--format', 'markdown']
+  ]) {
+    const result = run(args);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /duplicate option: --format/);
+    assert.match(result.stderr, /Usage:/);
+    assert.doesNotMatch(result.stderr, /does-not-exist/);
+  }
+});
+
+test('rejects duplicate output options before reading or writing files', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  try {
+    const missingFixture = path.join(directory, 'does-not-exist.md');
+    for (const [index, args] of [
+      ['--output', path.join(directory, 'first-before.json'), '--output', path.join(directory, 'second-before.json'), missingFixture],
+      [missingFixture, '--output', path.join(directory, 'first-after.json'), '--output', path.join(directory, 'second-after.json')]
+    ].entries()) {
+      const result = run(args);
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, /duplicate option: --output/);
+      assert.match(result.stderr, /Usage:/);
+      assert.doesNotMatch(result.stderr, /does-not-exist/);
+      assert.equal(fs.existsSync(args[args.indexOf('--output') + 1]), false, `first output in case ${index}`);
+      assert.equal(fs.existsSync(args[args.lastIndexOf('--output') + 1]), false, `second output in case ${index}`);
+    }
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('preserves validation failure exit code', () => {
   const result = run([path.resolve('fixtures/missing-approval.md'), '--format', 'json']);
   assert.equal(result.status, 2);
