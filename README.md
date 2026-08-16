@@ -28,13 +28,17 @@ skill-input-contract <brief.md|brief.json> [--format json|markdown] [--output <p
 
 Options may appear before or after the input file. Supported formats are `json`
 (the default) and `markdown`; invalid formats and missing option values exit with
-a usage error.
+a usage error. Each option may be supplied only once; duplicates are rejected
+before the input is read or an output file is written.
 
 The command exits with `2` when the contract has blocking findings, making it suitable for preflight scripts.
 
 ## Safety Notes
 
-This package reads local files and writes reports to stdout only. It does not send messages, post content, change repositories, or request approvals on your behalf.
+This package reads a local brief and writes the report to stdout by default. The
+optional `--output <path>` flag instead writes the report to that local file. It
+does not send messages, post content, change repositories, or request approvals
+on your behalf; local report creation is its only optional side effect.
 
 Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified `write`, `writes`, `writing`, `wrote`, and `written` actions are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
 
