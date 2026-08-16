@@ -35,10 +35,15 @@ try {
 
 function parseArgs(args) {
   const options = { format: 'json' };
+  const seenOptions = new Set();
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--format' || arg === '--output') {
+      if (seenOptions.has(arg)) {
+        throw new Error(`duplicate option: ${arg}`);
+      }
+      seenOptions.add(arg);
       const value = args[index + 1];
       if (!value || value.startsWith('--')) {
         throw new Error(`missing value for ${arg}`);
