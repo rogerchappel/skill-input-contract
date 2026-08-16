@@ -47,6 +47,11 @@ is required`, `ask for confirmation`, and `until approval is granted` are
 recognized; denials such as `no approval is required`, `approval is not needed`,
 or an instruction to act `without approval` leave an approval gap. A prohibition
 such as `do not publish without approval` still states an approval requirement.
+Approval guards such as `ask for confirmation before publishing` describe when
+an action would be allowed, not a request to perform it, so they appear only in
+`approvalsRequired`. If the same item separately requests an action—for example,
+`ask for confirmation before publishing, then send the approved report`—the item
+also appears in `sideEffects`.
 
 Explicitly prohibited actions are not side effects: for example, `do not send`,
 `never publish`, and `without uploading` describe boundaries rather than requested

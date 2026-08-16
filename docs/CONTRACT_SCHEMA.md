@@ -10,8 +10,9 @@ Required contract fields:
 - `inputs`: required or available inputs
 - `constraints`: operational and safety boundaries
 - `requestedActions`: expected work steps
-- `sideEffects`: actions that may affect external systems
-- `approvalsRequired`: approval constraints found in the brief
+- `sideEffects`: requested actions that may affect external systems
+- `approvalsRequired`: approval constraints found in the brief; a guard is not
+  itself a requested side effect
 - `openQuestions`: unresolved questions found in the brief
 - `verification`: checks expected before completion
 
