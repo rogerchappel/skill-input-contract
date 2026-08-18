@@ -30,6 +30,11 @@ const NEGATED_WITHOUT_APPROVAL_PATTERN = new RegExp(
   `\\b(?:do not|don't|never)\\b[^.;]*\\bwithout\\s+(?:any\\s+)?${APPROVAL_TERM}\\b`,
   'i'
 );
+const SIDE_EFFECT_TERM = String.raw`(?:send(?:s|ing|sent)?|post(?:s|ed|ing)?|publish(?:es|ed|ing)?|delete(?:s|d|ing)?|push(?:es|ed|ing)?|merge(?:s|d|ing)?|email(?:s|ed|ing)?|notif(?:y|ies|ied|ying)|upload(?:s|ed|ing)?|write(?:s|ing)?|wrote|written)`;
+const POST_ACTION_APPROVAL_PATTERNS = [
+  new RegExp(`\\b${APPROVAL_TERM}\\b[^.;]*\\b(?:after|once|following)\\b[^.;]*\\b${SIDE_EFFECT_TERM}\\b`, 'i'),
+  new RegExp(`\\b${SIDE_EFFECT_TERM}\\b[^.;]*\\bbefore\\b[^.;]*\\b${APPROVAL_TERM}\\b`, 'i')
+];
 
 export function parseTaskBrief(text, source = 'inline') {
   const normalized = String(text || '').replace(/\r\n/g, '\n');
@@ -170,6 +175,7 @@ function hasWord(item, word) {
 function isApprovalRequirement(item) {
   if (!APPROVAL_PATTERN.test(item)) return false;
   if (NEGATED_WITHOUT_APPROVAL_PATTERN.test(item)) return true;
+  if (POST_ACTION_APPROVAL_PATTERNS.some(pattern => pattern.test(item))) return false;
   return !DENIED_APPROVAL_PATTERNS.some(pattern => pattern.test(item));
 }
 

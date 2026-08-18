@@ -56,6 +56,46 @@ test('extracts affirmative approval and confirmation requirements', () => {
   }
 });
 
+test('rejects explicitly post-action approval requirements', () => {
+  const constraints = [
+    'Get approval after publishing the report',
+    'Ask for confirmation once the email is sent',
+    'Write the audit record before requesting permission'
+  ];
+
+  for (const constraint of constraints) {
+    const contract = parseTaskBrief(`# External action\n\n## Outcome\n\nPublish and write the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- ${constraint}\n\n## Verification\n\n- inspect result`);
+    const result = validateContract(contract);
+
+    assert.deepEqual(contract.approvalsRequired, [], constraint);
+    assert.equal(result.status, 'fail', constraint);
+    assert.ok(result.findings.some(item => item.code === 'approval_gap'), constraint);
+  }
+});
+
+test('retains approval-before and approval-until guards', () => {
+  const constraints = [
+    'After approval is granted, publish the report',
+    'Publish the report only after confirmation',
+    'Do not write the audit record until permission is granted'
+  ];
+
+  for (const constraint of constraints) {
+    const contract = parseTaskBrief(`# External action\n\n## Outcome\n\nPublish the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- ${constraint}\n\n## Verification\n\n- inspect result`);
+
+    assert.deepEqual(contract.approvalsRequired, [constraint], constraint);
+    assert.ok(!validateContract(contract).findings.some(item => item.code === 'approval_gap'), constraint);
+  }
+});
+
+test('rejects a mixed constraint whose approval prerequisite is post-action', () => {
+  const constraint = 'Prepare locally, publish the report, and request approval after publishing';
+  const contract = parseTaskBrief(`# Publish report\n\n## Outcome\n\nPublish the report.\n\n## Inputs\n\n- report\n\n## Constraints\n\n- ${constraint}\n\n## Verification\n\n- inspect publication`);
+
+  assert.deepEqual(contract.approvalsRequired, []);
+  assert.ok(validateContract(contract).findings.some(item => item.code === 'approval_gap'));
+});
+
 test('keeps approval guards separate from requested side effects', () => {
   const contract = parseTaskBrief(fs.readFileSync('fixtures/approval-guard.md', 'utf8'), 'fixtures/approval-guard.md');
 
@@ -88,6 +128,18 @@ test('CLI renders guard-only constraints as approval requirements, not side effe
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /## Side Effects\n\n- None listed/);
   assert.match(result.stdout, /## Approval Requirements\n\n- Ask for confirmation before publishing the draft/);
+});
+
+test('CLI makes post-action approval gaps machine-checkable', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/post-action-approval.md'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.deepEqual(report.contract.approvalsRequired, []);
+  assert.ok(report.validation.findings.some(item => item.code === 'approval_gap'));
 });
 
 test('allows explicitly local report writes without an approval requirement', () => {
