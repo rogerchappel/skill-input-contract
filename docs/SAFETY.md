@@ -12,6 +12,9 @@ affirmatively require approval, confirmation, permission, authorization, or
 consent. For example, `approval is required` and `ask for confirmation` satisfy
 the gate, while `no approval is required` and `publish without approval` do not.
 The latter forms produce an `approval_gap` when an external side effect exists.
+Approval must also precede the side effect. `Approval after publishing` and
+`write before requesting permission` are post-action confirmations, not safety
+guards, so they produce the same machine-checkable `approval_gap`.
 
 ## Negated Actions
 

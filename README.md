@@ -47,6 +47,9 @@ is required`, `ask for confirmation`, and `until approval is granted` are
 recognized; denials such as `no approval is required`, `approval is not needed`,
 or an instruction to act `without approval` leave an approval gap. A prohibition
 such as `do not publish without approval` still states an approval requirement.
+Approval must control the action before it happens: `publish only after approval`
+is valid, while `get approval after publishing` is not. Post-action approval
+wording leaves a machine-checkable `approval_gap`, and the CLI exits with `2`.
 Approval guards such as `ask for confirmation before publishing` describe when
 an action would be allowed, not a request to perform it, so they appear only in
 `approvalsRequired`. If the same item separately requests an action—for example,
