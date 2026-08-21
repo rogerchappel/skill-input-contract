@@ -31,7 +31,11 @@ Options may appear before or after the input file. Supported formats are `json`
 a usage error. Each option may be supplied only once; duplicates are rejected
 before the input is read or an output file is written.
 
-The command exits with `2` when the contract has blocking findings, making it suitable for preflight scripts.
+The command exits with `1` for unreadable files, invalid JSON, or JSON contract
+schema errors. Schema errors identify the invalid field on stderr without a
+stack trace or partial report. It exits with `2` when a well-formed contract has
+blocking findings, making it suitable for preflight scripts. Exact JSON input
+field types and defaults are documented in [the contract schema](docs/CONTRACT_SCHEMA.md).
 
 ## Safety Notes
 

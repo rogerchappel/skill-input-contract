@@ -1,0 +1,5 @@
+{
+  "title": "Invalid contract",
+  "outcome": "Demonstrate deterministic validation.",
+  "inputs": "README.md"
+}

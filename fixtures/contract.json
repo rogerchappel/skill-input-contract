@@ -1,0 +1,13 @@
+{
+  "source": "fixtures/contract.json",
+  "title": "Validate release notes",
+  "outcome": "Validate release notes before publishing.",
+  "inputs": ["Release notes draft"],
+  "constraints": ["Keep the report local"],
+  "requestedActions": ["Inspect the draft"],
+  "sideEffects": [],
+  "approvalsRequired": [],
+  "openQuestions": [],
+  "verification": ["Run npm run release:check"],
+  "missing": []
+}
