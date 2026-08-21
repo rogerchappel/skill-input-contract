@@ -39,7 +39,11 @@ const POST_ACTION_APPROVAL_PATTERNS = [
 export function parseTaskBrief(text, source = 'inline') {
   const normalized = String(text || '').replace(/\r\n/g, '\n');
   if (!normalized.trim()) throw new Error('Task brief is empty');
-  if (source.endsWith('.json')) return normalizeContract(JSON.parse(normalized), source);
+  if (source.endsWith('.json')) {
+    const contract = JSON.parse(normalized);
+    validateJsonContract(contract);
+    return normalizeContract(contract, source);
+  }
 
   const sections = splitSections(normalized);
   const title = firstHeading(normalized) || basename(source);
@@ -197,6 +201,33 @@ function normalizeContract(contract, source) {
     verification: unique(contract.verification || []),
     missing: unique(contract.missing || [])
   };
+}
+
+const JSON_SCALAR_FIELDS = ['source', 'title', 'outcome'];
+const JSON_COLLECTION_FIELDS = [
+  'inputs', 'constraints', 'requestedActions', 'sideEffects',
+  'approvalsRequired', 'openQuestions', 'verification', 'missing'
+];
+
+function validateJsonContract(contract) {
+  if (contract === null || typeof contract !== 'object' || Array.isArray(contract)) {
+    throw new Error('Invalid JSON contract: expected an object');
+  }
+  for (const field of JSON_SCALAR_FIELDS) {
+    if (field in contract && typeof contract[field] !== 'string') {
+      throw new Error(`Invalid JSON contract field "${field}": expected a string`);
+    }
+  }
+  for (const field of JSON_COLLECTION_FIELDS) {
+    if (!(field in contract)) continue;
+    if (!Array.isArray(contract[field])) {
+      throw new Error(`Invalid JSON contract field "${field}": expected an array of strings`);
+    }
+    const invalidIndex = contract[field].findIndex(item => typeof item !== 'string');
+    if (invalidIndex !== -1) {
+      throw new Error(`Invalid JSON contract field "${field}[${invalidIndex}]": expected a string`);
+    }
+  }
 }
 
 function firstHeading(text) { return text.match(/^#\s+(.+)$/m)?.[1]?.trim(); }
