@@ -336,3 +336,69 @@ test('includes a bounded readiness score in JSON reports', () => {
   assert.equal(scoreContract(contract), 100);
   assert.equal(toJsonReport(contract).score, 100);
 });
+
+test('parses a valid JSON contract and defaults omitted fields', () => {
+  const contract = parseTaskBrief(JSON.stringify({
+    title: 'JSON brief',
+    outcome: 'Validate the supplied task brief.',
+    inputs: ['brief.json'],
+    verification: ['Run the release checks']
+  }), 'brief.json');
+
+  assert.equal(contract.source, 'brief.json');
+  assert.deepEqual(contract.constraints, []);
+  assert.deepEqual(contract.missing, []);
+  assert.equal(validateContract(contract).status, 'pass');
+});
+
+test('rejects non-object JSON contracts', () => {
+  for (const value of [null, [], 'brief', 42, true]) {
+    assert.throws(() => parseTaskBrief(JSON.stringify(value), 'brief.json'), /Invalid JSON contract: expected an object/);
+  }
+});
+
+test('rejects wrong JSON scalar field types', () => {
+  for (const field of ['source', 'title', 'outcome']) {
+    assert.throws(
+      () => parseTaskBrief(JSON.stringify({ [field]: 42 }), 'brief.json'),
+      error => error.message === `Invalid JSON contract field "${field}": expected a string`
+    );
+  }
+});
+
+test('rejects wrong JSON collection types and items', () => {
+  const fields = ['inputs', 'constraints', 'requestedActions', 'sideEffects', 'approvalsRequired', 'openQuestions', 'verification', 'missing'];
+  for (const field of fields) {
+    assert.throws(
+      () => parseTaskBrief(JSON.stringify({ [field]: 'not-an-array' }), 'brief.json'),
+      error => error.message === `Invalid JSON contract field "${field}": expected an array of strings`
+    );
+    assert.throws(
+      () => parseTaskBrief(JSON.stringify({ [field]: ['valid', 42] }), 'brief.json'),
+      error => error.message === `Invalid JSON contract field "${field}[1]": expected a string`
+    );
+  }
+});
+
+test('CLI reports malformed JSON contracts without a stack trace', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/invalid-contract.json'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'skill-input-contract: Invalid JSON contract field "inputs": expected an array of strings\n');
+  assert.doesNotMatch(result.stderr, /(?:\s+at\s|TypeError)/);
+});
+
+test('CLI renders the valid JSON fixture in both report formats', () => {
+  for (const format of ['json', 'markdown']) {
+    const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/contract.json', '--format', format], {
+      cwd: process.cwd(),
+      encoding: 'utf8'
+    });
+    assert.equal(result.status, 0, `${format}: ${result.stderr}`);
+    assert.match(result.stdout, format === 'json' ? /"score": 100/ : /# Validate release notes/);
+  }
+});
