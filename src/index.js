@@ -37,13 +37,14 @@ const POST_ACTION_APPROVAL_PATTERNS = [
 ];
 
 export function parseTaskBrief(text, source = 'inline') {
-  const normalized = String(text || '').replace(/\r\n/g, '\n');
-  if (!normalized.trim()) throw new Error('Task brief is empty');
+  const input = String(text || '');
+  if (!input.trim()) throw new Error('Task brief is empty');
   if (source.endsWith('.json')) {
-    const contract = JSON.parse(normalized);
+    const contract = JSON.parse(input);
     validateJsonContract(contract);
     return normalizeContract(contract, source);
   }
+  const normalized = input.replace(/\r\n?|\n/g, '\n');
 
   const sections = splitSections(normalized);
   const title = firstHeading(normalized) || basename(source);

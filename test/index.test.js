@@ -362,6 +362,15 @@ test('parses a valid JSON contract and defaults omitted fields', () => {
   assert.equal(validateContract(contract).status, 'pass');
 });
 
+test('preserves escaped carriage returns in JSON string values', () => {
+  const contract = parseTaskBrief(JSON.stringify({
+    title: 'JSON brief',
+    outcome: 'Validate\rthe supplied task brief.'
+  }), 'brief.json');
+
+  assert.equal(contract.outcome, 'Validate\rthe supplied task brief.');
+});
+
 test('rejects non-object JSON contracts', () => {
   for (const value of [null, [], 'brief', 42, true]) {
     assert.throws(() => parseTaskBrief(JSON.stringify(value), 'brief.json'), /Invalid JSON contract: expected an object/);
