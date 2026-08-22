@@ -75,4 +75,7 @@ a side effect. Common tense and participle forms are recognized as whole words, 
 
 ## Limitations
 
-Markdown parsing is deterministic and section-name based. For unusual templates, prefer JSON input or add a fixture before relying on the result.
+Markdown parsing is deterministic and section-name based. LF, CRLF, and CR line
+endings are accepted equivalently. JSON input is parsed without Markdown line-ending
+normalization. For unusual templates, prefer JSON input or add a fixture before
+relying on the result.
