@@ -15,6 +15,17 @@ test('extracts inputs, verification, side effects, and approvals', () => {
   assert.equal(validateContract(contract).status, 'pass');
 });
 
+test('parses Markdown consistently across LF, CRLF, and CR line endings', () => {
+  const lf = fs.readFileSync('fixtures/task-brief.md', 'utf8');
+  const expected = parseTaskBrief(lf, 'brief.md');
+
+  for (const separator of ['\r\n', '\r']) {
+    const variant = lf.replaceAll('\n', separator);
+    assert.deepEqual(parseTaskBrief(variant, 'brief.md'), expected);
+    assert.equal(validateContract(parseTaskBrief(variant, 'brief.md')).status, 'pass');
+  }
+});
+
 test('fails when side effects lack approvals', () => {
   const contract = parseTaskBrief(fs.readFileSync('fixtures/missing-approval.md', 'utf8'), 'fixtures/missing-approval.md');
   const result = validateContract(contract);

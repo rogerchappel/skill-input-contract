@@ -100,6 +100,24 @@ test('preserves validation failure exit code', () => {
   assert.equal(JSON.parse(result.stdout).validation.status, 'fail');
 });
 
+test('parses a valid CR-only Markdown brief', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const crOnlyFixture = path.join(directory, 'task-brief.md');
+  try {
+    const brief = fs.readFileSync(fixture, 'utf8').replaceAll('\n', '\r');
+    fs.writeFileSync(crOnlyFixture, brief);
+    const result = run([crOnlyFixture, '--format', 'json']);
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(report.validation.status, 'pass');
+    assert.ok(report.contract.inputs.includes('Repository path'));
+    assert.ok(report.contract.verification.some(item => item.includes('links')));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('exits with an approval gap when approval wording is denied', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
   const brief = path.join(directory, 'denied-approval.md');
