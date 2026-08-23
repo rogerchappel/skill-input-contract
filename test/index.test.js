@@ -162,6 +162,22 @@ test('allows explicitly local report writes without an approval requirement', ()
   assert.ok(!result.findings.some(item => item.code === 'approval_gap'));
 });
 
+test('does not let a local write exempt a separate durable write', () => {
+  const outcomes = [
+    'Write a local report, then write a shared artifact.',
+    'Write a local file and write release notes.',
+    'Write to stdout; write a summary.'
+  ];
+
+  for (const outcome of outcomes) {
+    const contract = parseTaskBrief(`# Mixed writes\n\n## Outcome\n\n${outcome}\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect outputs`);
+    const result = validateContract(contract);
+
+    assert.deepEqual(contract.sideEffects, [outcome], outcome);
+    assert.ok(result.findings.some(item => item.code === 'approval_gap'), outcome);
+  }
+});
+
 test('still classifies unqualified durable writes as side effects', () => {
   const contract = parseTaskBrief('# Persist report\n\n## Outcome\n\nWrite a report.\n\n## Inputs\n\n- source file\n\n## Verification\n\n- inspect report');
   const result = validateContract(contract);
