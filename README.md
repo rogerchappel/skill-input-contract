@@ -44,7 +44,7 @@ optional `--output <path>` flag instead writes the report to that local file. It
 does not send messages, post content, change repositories, or request approvals
 on your behalf; local report creation is its only optional side effect.
 
-Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified `write`, `writes`, `writing`, `wrote`, and `written` actions are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap.
+Contract validation treats send, publish, upload, and similar actions as external side effects that require an approval requirement. Unqualified `write`, `writes`, `writing`, `wrote`, and `written` actions are treated as potentially durable, while writes explicitly limited to local files, local reports, or stdout are local-only and do not trigger an approval gap. That exemption applies only to the matching write clause: adding a local report to a description does not exempt a separate shared or unqualified write.
 
 Only affirmative requirements satisfy that gate. Constraints such as `approval
 is required`, `ask for confirmation`, and `until approval is granted` are
