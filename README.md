@@ -75,7 +75,11 @@ a side effect. Common tense and participle forms are recognized as whole words, 
 
 ## Limitations
 
-Markdown parsing is deterministic and section-name based. LF, CRLF, and CR line
-endings are accepted equivalently. JSON input is parsed without Markdown line-ending
-normalization. For unusual templates, prefer JSON input or add a fixture before
-relying on the result.
+Markdown parsing is deterministic and section-name based. Content inside valid
+CommonMark-style backtick or tilde fenced code blocks is treated as an example,
+not executable brief content, so it is excluded from item, side-effect, approval,
+and open-question extraction. Fences may have info strings and up to three leading
+spaces; a closing fence must use the same character and be at least as long as its
+opener. LF, CRLF, and CR line endings are accepted equivalently. JSON input is
+parsed without Markdown line-ending normalization. For unusual templates, prefer
+JSON input or add a fixture before relying on the result.
