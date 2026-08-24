@@ -134,3 +134,21 @@ test('exits with an approval gap when approval wording is denied', () => {
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('ignores fenced examples while retaining unfenced actions', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const brief = path.join(directory, 'fenced-example.md');
+  try {
+    fs.writeFileSync(brief, '# Local report\n\n## Outcome\n\nWrite a local report.\n\n## Inputs\n\n- Repository\n\n## Actions\n\n```sh\n- publish the release\n- Notify customers?\n```\n\n- Write the report locally\n\n## Verification\n\n- Inspect the local report\n');
+    const result = run([brief, '--format', 'json']);
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(report.contract.requestedActions, ['Write the report locally']);
+    assert.deepEqual(report.contract.sideEffects, []);
+    assert.deepEqual(report.contract.openQuestions, []);
+    assert.ok(!report.validation.findings.some(item => item.code === 'approval_gap'));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
