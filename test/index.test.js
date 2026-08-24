@@ -26,6 +26,68 @@ test('parses Markdown consistently across LF, CRLF, and CR line endings', () => 
   }
 });
 
+test('ignores executable-looking content inside CommonMark fenced code blocks', () => {
+  const contract = parseTaskBrief(`# Local report
+
+## Outcome
+
+Write a local report.
+
+## Inputs
+
+- Repository path
+
+## Actions
+
+\`\`\`sh
+- publish the release
+- Should we notify customers?
+\`\`\`
+
+~~~text extra
+Upload the report.
+Who should receive it?
+~~~
+
+- Write the report locally
+
+## Verification
+
+- Inspect the local report
+`);
+
+  assert.deepEqual(contract.requestedActions, ['Write the report locally']);
+  assert.deepEqual(contract.sideEffects, []);
+  assert.deepEqual(contract.openQuestions, []);
+  assert.equal(validateContract(contract).status, 'pass');
+});
+
+test('requires a matching fence character and sufficient closing length', () => {
+  const contract = parseTaskBrief(`# Local report
+
+## Outcome
+
+Write a local report.
+
+## Actions
+
+~~~~ example
+publish the release
+~~~
+still fenced?
+~~~~~
+- Write output locally
+
+## Verification
+
+- Inspect output
+`);
+
+  assert.deepEqual(contract.requestedActions, ['Write output locally']);
+  assert.deepEqual(contract.sideEffects, []);
+  assert.deepEqual(contract.openQuestions, []);
+});
+
 test('fails when side effects lack approvals', () => {
   const contract = parseTaskBrief(fs.readFileSync('fixtures/missing-approval.md', 'utf8'), 'fixtures/missing-approval.md');
   const result = validateContract(contract);
