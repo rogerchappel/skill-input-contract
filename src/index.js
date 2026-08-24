@@ -45,7 +45,7 @@ export function parseTaskBrief(text, source = 'inline') {
     validateJsonContract(contract);
     return normalizeContract(contract, source);
   }
-  const normalized = input.replace(/\r\n?|\n/g, '\n');
+  const normalized = stripFencedCodeBlocks(input.replace(/\r\n?|\n/g, '\n'));
 
   const sections = splitSections(normalized);
   const title = firstHeading(normalized) || basename(source);
@@ -126,6 +126,23 @@ function splitSections(text) {
     sections.get(current).push(raw);
   }
   return sections;
+}
+
+function stripFencedCodeBlocks(text) {
+  let fence = null;
+  return text.split('\n').map(line => {
+    if (fence) {
+      const closing = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (closing && closing[1][0] === fence.character && closing[1].length >= fence.length) fence = null;
+      return '';
+    }
+
+    const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (!opening) return line;
+    if (opening[1][0] === '`' && opening[2].includes('`')) return line;
+    fence = { character: opening[1][0], length: opening[1].length };
+    return '';
+  }).join('\n');
 }
 
 function collectNamed(sections, names) {
