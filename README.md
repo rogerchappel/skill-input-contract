@@ -75,7 +75,17 @@ a side effect. Common tense and participle forms are recognized as whole words, 
 
 ## Limitations
 
-Markdown parsing is deterministic and section-name based. Content inside valid
+Markdown parsing is deterministic and matches section names exactly (case
+insensitively): `Outcome`, `Goal`, `Mission`, or `Summary`; `Inputs`, `Context`,
+`Required Inputs`, or `Available Context`; `Constraints`, `Limits`,
+`Requirements`, or `Safety`; `Actions`, `Tasks`, `Workflow`, `Steps`, or `MVP`;
+and `Verification`, `Checks`, `Done`, or `Acceptance Criteria`. Optional closing
+ATX hashes are ignored, so `## Inputs ##` is equivalent to `## Inputs`.
+Decorated, compound, prefixed, and negated names such as `Inputs (required)`,
+`Inputs and constraints`, `Pre-verification`, and `Non-inputs` intentionally do
+not route content into contract fields.
+
+Content inside valid
 CommonMark-style backtick or tilde fenced code blocks is treated as an example,
 not executable brief content, so it is excluded from item, side-effect, approval,
 and open-question extraction. Fences may have info strings and up to three leading
