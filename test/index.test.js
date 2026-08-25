@@ -26,6 +26,63 @@ test('parses Markdown consistently across LF, CRLF, and CR line endings', () => 
   }
 });
 
+test('routes only exact canonical section headings and aliases', () => {
+  const contract = parseTaskBrief(`# Exact section routing
+
+## Outcome
+
+Validate exact Markdown section routing.
+
+## Non-inputs
+
+- rejected input
+
+## Inputs and constraints
+
+- rejected compound item
+
+## Verification (required)
+
+- rejected decorated check
+
+## Context
+
+- accepted input
+
+## Requirements
+
+- accepted constraint
+
+## Tasks
+
+- accepted action
+
+## Acceptance Criteria
+
+- accepted check
+`);
+
+  assert.deepEqual(contract.inputs, ['accepted input']);
+  assert.deepEqual(contract.constraints, ['accepted constraint']);
+  assert.deepEqual(contract.requestedActions, ['accepted action']);
+  assert.deepEqual(contract.verification, ['accepted check']);
+  assert.equal(validateContract(contract).status, 'pass');
+});
+
+test('CLI does not populate contract fields from negative or decorated headings', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'fixtures/negative-section-headings.md'], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.deepEqual(report.contract.inputs, ['accepted input']);
+  assert.deepEqual(report.contract.constraints, ['accepted constraint']);
+  assert.deepEqual(report.contract.requestedActions, ['accepted action']);
+  assert.deepEqual(report.contract.verification, ['accepted check']);
+});
+
 test('ignores executable-looking content inside CommonMark fenced code blocks', () => {
   const contract = parseTaskBrief(`# Local report
 
