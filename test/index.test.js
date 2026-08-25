@@ -45,7 +45,7 @@ Validate exact Markdown section routing.
 
 - rejected decorated check
 
-## Context
+## Context ##
 
 - accepted input
 

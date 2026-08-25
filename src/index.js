@@ -119,7 +119,7 @@ function splitSections(text) {
   for (const raw of text.split('\n')) {
     const heading = raw.match(/^#{1,4}\s+(.+)$/);
     if (heading) {
-      current = heading[1].trim().toLowerCase();
+      current = heading[1].replace(/\s+#+\s*$/, '').trim().toLowerCase();
       if (!sections.has(current)) sections.set(current, []);
       continue;
     }
@@ -148,7 +148,7 @@ function stripFencedCodeBlocks(text) {
 function collectNamed(sections, names) {
   const out = [];
   for (const [name, lines] of sections) {
-    if (names.some(key => name.includes(key))) out.push(...extractItems(lines));
+    if (names.includes(name)) out.push(...extractItems(lines));
   }
   return unique(out);
 }
