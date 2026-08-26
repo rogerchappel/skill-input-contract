@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseTaskBrief, validateContract, renderMarkdown, scoreContract, toJsonReport } from '../src/index.js';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 test('extracts inputs, verification, side effects, and approvals', () => {
@@ -151,6 +153,120 @@ test('fails when side effects lack approvals', () => {
   assert.equal(result.status, 'fail');
   assert.ok(contract.sideEffects.some(item => item.includes('Send a notification email')));
   assert.ok(result.findings.some(item => item.code === 'approval_gap'));
+});
+
+test('fails when one of several side effects is not covered by approval', () => {
+  const contract = parseTaskBrief(`# Mixed actions
+
+## Outcome
+
+Publish a report and remove an obsolete release.
+
+## Inputs
+
+- Release workspace
+
+## Constraints
+
+- Get approval before publishing
+
+## Actions
+
+- Publish the report
+- Delete the obsolete release
+
+## Verification
+
+- Confirm the report and release state`, 'mixed.md');
+
+  const result = validateContract(contract);
+  assert.equal(result.status, 'fail');
+  assert.ok(result.findings.some(item => item.code === 'approval_gap' && item.message.includes('Delete the obsolete release')));
+});
+
+test('preserves broad guards and covered single-action approval', () => {
+  const broadGuard = parseTaskBrief(`# Guarded actions
+
+## Outcome
+
+Publish a report and delete an obsolete release.
+
+## Inputs
+
+- Release workspace
+
+## Constraints
+
+- Get approval before any external side effect
+
+## Actions
+
+- Publish the report
+- Delete the obsolete release
+
+## Verification
+
+- Confirm the final state`, 'guarded.md');
+  const singleAction = parseTaskBrief(`# Publish report
+
+## Outcome
+
+Publish the final report.
+
+## Inputs
+
+- Report draft
+
+## Constraints
+
+- Get approval before publishing
+
+## Actions
+
+- Publish the report
+
+## Verification
+
+- Confirm the published report`, 'single.md');
+
+  assert.equal(validateContract(broadGuard).status, 'pass');
+  assert.equal(validateContract(singleAction).status, 'pass');
+});
+
+test('CLI exits 2 and reports the uncovered mixed-action side effect', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const brief = path.join(directory, 'mixed.md');
+  fs.writeFileSync(brief, `# Mixed actions
+
+## Outcome
+
+Publish a report and delete an obsolete release.
+
+## Inputs
+
+- Release workspace
+
+## Constraints
+
+- Get approval before publishing
+
+## Actions
+
+- Publish the report
+- Delete the obsolete release
+
+## Verification
+
+- Confirm the final state\n`);
+
+  try {
+    const result = spawnSync(process.execPath, ['src/cli.js', brief, '--format', 'json'], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    const report = JSON.parse(result.stdout);
+    assert.ok(report.validation.findings.some(item => item.code === 'approval_gap' && item.message.includes('Delete the obsolete release')));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('does not treat denied approval language as a requirement', () => {
