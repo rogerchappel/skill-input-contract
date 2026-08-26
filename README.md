@@ -54,6 +54,9 @@ such as `do not publish without approval` still states an approval requirement.
 Approval must control the action before it happens: `publish only after approval`
 is valid, while `get approval after publishing` is not. Post-action approval
 wording leaves a machine-checkable `approval_gap`, and the CLI exits with `2`.
+Approval scope is checked per external action: approval to publish does not also
+cover an unrelated deletion in the same brief. A requirement that explicitly
+guards `any external side effect` covers the complete action set.
 Approval guards such as `ask for confirmation before publishing` describe when
 an action would be allowed, not a request to perform it, so they appear only in
 `approvalsRequired`. If the same item separately requests an action—for example,
