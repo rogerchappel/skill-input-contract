@@ -36,6 +36,23 @@ const POST_ACTION_APPROVAL_PATTERNS = [
   new RegExp(`\\b${APPROVAL_TERM}\\b[^.;]*\\b(?:after|once|following)\\b[^.;]*\\b${SIDE_EFFECT_TERM}\\b`, 'i'),
   new RegExp(`\\b${SIDE_EFFECT_TERM}\\b[^.;]*\\bbefore\\b[^.;]*\\b${APPROVAL_TERM}\\b`, 'i')
 ];
+const APPROVAL_SCOPE_FAMILIES = [
+  /\b(?:send|sends|sending|sent)\b/i,
+  /\b(?:post|posts|posted|posting)\b/i,
+  /\b(?:publish|publishes|published|publishing)\b/i,
+  /\b(?:delete|deletes|deleted|deleting)\b/i,
+  /\b(?:push|pushes|pushed|pushing)\b/i,
+  /\b(?:merge|merges|merged|merging)\b/i,
+  /\b(?:email|emails|emailed|emailing)\b/i,
+  /\b(?:notify|notifies|notified|notifying)\b/i,
+  /\b(?:upload|uploads|uploaded|uploading)\b/i,
+  /\b(?:write|writes|writing|wrote|written)\b/i
+];
+const BROAD_APPROVAL_SCOPE_PATTERNS = [
+  /\b(?:any|all|every)\s+(?:external\s+)?(?:action|change|side effect)s?\b/i,
+  /\blocal[- ]only\b[^.;]*\b(?:until|unless|before)\b/i,
+  new RegExp(`\\b(?:do not|don't|never)\\b[^.;]*\\buntil\\b[^.;]*\\b${APPROVAL_TERM}\\b`, 'i')
+];
 
 export function parseTaskBrief(text, source = 'inline') {
   const input = String(text || '');
@@ -83,12 +100,22 @@ export function validateContract(contract) {
   if (!contract.outcome || contract.outcome.length < 8) findings.push(fail('missing_outcome', 'No clear requested outcome was found.'));
   if (contract.inputs.length === 0) findings.push(warn('missing_inputs', 'No explicit inputs were listed.'));
   if (contract.verification.length === 0) findings.push(warn('missing_verification', 'No verification workflow was listed.'));
-  if (contract.sideEffects.length > 0 && contract.approvalsRequired.length === 0) {
-    findings.push(fail('approval_gap', 'Potential external side effects need an approval requirement.'));
+  for (const sideEffect of uncoveredSideEffects(contract)) {
+    findings.push(fail('approval_gap', `Potential external side effect needs a matching approval requirement: ${sideEffect}`));
   }
   for (const question of contract.openQuestions) findings.push(warn('open_question', question));
   const status = findings.some(item => item.level === 'fail') ? 'fail' : findings.some(item => item.level === 'warn') ? 'warn' : 'pass';
   return { status, findings };
+}
+
+function uncoveredSideEffects(contract) {
+  if (contract.sideEffects.length === 0) return [];
+  if (contract.approvalsRequired.some(requirement => BROAD_APPROVAL_SCOPE_PATTERNS.some(pattern => pattern.test(requirement)))) return [];
+
+  return contract.sideEffects.filter(sideEffect => {
+    const families = APPROVAL_SCOPE_FAMILIES.filter(pattern => pattern.test(sideEffect));
+    return families.length === 0 || !contract.approvalsRequired.some(requirement => families.some(pattern => pattern.test(requirement)));
+  });
 }
 
 export function scoreContract(contract) {
