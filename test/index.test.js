@@ -184,6 +184,49 @@ Publish a report and remove an obsolete release.
   assert.ok(result.findings.some(item => item.code === 'approval_gap' && item.message.includes('Delete the obsolete release')));
 });
 
+test('requires approval for every action family in a compound side effect', () => {
+  const partial = parseTaskBrief(`# Publish announcement
+
+## Outcome
+
+Publish the package and send the announcement email.
+
+## Inputs
+
+- Package and announcement
+
+## Constraints
+
+- Get approval before publishing the package
+
+## Verification
+
+- Confirm the package and email state`, 'compound-partial.md');
+  const complete = parseTaskBrief(`# Publish announcement
+
+## Outcome
+
+Publish the package and send the announcement email.
+
+## Inputs
+
+- Package and announcement
+
+## Constraints
+
+- Get approval before publishing the package
+- Get approval before sending the announcement email
+
+## Verification
+
+- Confirm the package and email state`, 'compound-complete.md');
+
+  const partialResult = validateContract(partial);
+  assert.equal(partialResult.status, 'fail');
+  assert.ok(partialResult.findings.some(item => item.code === 'approval_gap' && item.message.includes('Publish the package and send the announcement email')));
+  assert.equal(validateContract(complete).status, 'pass');
+});
+
 test('preserves broad guards and covered single-action approval', () => {
   const broadGuard = parseTaskBrief(`# Guarded actions
 
@@ -264,6 +307,37 @@ Publish a report and delete an obsolete release.
     assert.equal(result.status, 2);
     const report = JSON.parse(result.stdout);
     assert.ok(report.validation.findings.some(item => item.code === 'approval_gap' && item.message.includes('Delete the obsolete release')));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI rejects partial approval for a compound side effect', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const brief = path.join(directory, 'compound.md');
+  fs.writeFileSync(brief, `# Publish announcement
+
+## Outcome
+
+Publish the package and send the announcement email.
+
+## Inputs
+
+- Package and announcement
+
+## Constraints
+
+- Get approval before publishing the package
+
+## Verification
+
+- Confirm the package and email state\n`);
+
+  try {
+    const result = spawnSync(process.execPath, ['src/cli.js', brief, '--format', 'json'], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    const report = JSON.parse(result.stdout);
+    assert.ok(report.validation.findings.some(item => item.code === 'approval_gap' && item.message.includes('announcement email')));
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
