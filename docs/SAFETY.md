@@ -16,6 +16,13 @@ Approval must also precede the side effect. `Approval after publishing` and
 `write before requesting permission` are post-action confirmations, not safety
 guards, so they produce the same machine-checkable `approval_gap`.
 
+Approval coverage is evaluated for every external-action family within each
+side-effect item. A compound action such as “publish the package and send the
+announcement email” therefore needs approval covering both publishing and
+sending; approval for publishing alone leaves an `approval_gap`. Separate
+matching requirements may cover the families, while an explicitly broad guard
+such as approval before any external side effect continues to cover all of them.
+
 ## Negated Actions
 
 An explicit prohibition such as `do not send`, `never publish`, or `without
