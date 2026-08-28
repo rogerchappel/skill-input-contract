@@ -114,7 +114,7 @@ function uncoveredSideEffects(contract) {
 
   return contract.sideEffects.filter(sideEffect => {
     const families = APPROVAL_SCOPE_FAMILIES.filter(pattern => pattern.test(sideEffect));
-    return families.length === 0 || !contract.approvalsRequired.some(requirement => families.some(pattern => pattern.test(requirement)));
+    return families.length === 0 || !families.every(pattern => contract.approvalsRequired.some(requirement => pattern.test(requirement)));
   });
 }
 
