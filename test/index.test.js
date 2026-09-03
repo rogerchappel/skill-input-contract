@@ -155,6 +155,45 @@ test('fails when side effects lack approvals', () => {
   assert.ok(result.findings.some(item => item.code === 'approval_gap'));
 });
 
+test('does not treat noun-only input and verification values as requested side effects', () => {
+  const contract = parseTaskBrief(fs.readFileSync('fixtures/contact-lookup.md', 'utf8'), 'fixtures/contact-lookup.md');
+  const result = validateContract(contract);
+
+  assert.deepEqual(contract.inputs, ['Email address', 'Customer identifier']);
+  assert.deepEqual(contract.sideEffects, []);
+  assert.equal(result.status, 'pass');
+  assert.ok(!result.findings.some(item => item.code === 'approval_gap'));
+});
+
+test('still requires scoped approval for genuine email actions', () => {
+  const contract = parseTaskBrief(`# Email customer
+
+## Outcome
+
+Send the customer an email update.
+
+## Inputs
+
+- Email address
+
+## Actions
+
+- Email the status update
+
+## Constraints
+
+- Get approval before publishing the status page
+
+## Verification
+
+- Confirm the email was sent
+`);
+  const result = validateContract(contract);
+
+  assert.deepEqual(contract.sideEffects, ['Email the status update', 'Send the customer an email update.']);
+  assert.ok(result.findings.some(item => item.code === 'approval_gap'));
+});
+
 test('fails when one of several side effects is not covered by approval', () => {
   const contract = parseTaskBrief(`# Mixed actions
 
