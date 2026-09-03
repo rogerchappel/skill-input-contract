@@ -73,7 +73,7 @@ export function parseTaskBrief(text, source = 'inline') {
   const requestedActions = collectNamed(sections, ['actions', 'tasks', 'workflow', 'steps', 'mvp']);
   const verification = collectNamed(sections, ['verification', 'checks', 'done', 'acceptance criteria']);
   const openQuestions = collectQuestions(normalized, allBullets);
-  const sideEffects = detectSideEffects([...requestedActions, ...allBullets, outcome]);
+  const sideEffects = detectSideEffects([...requestedActions, ...constraints, outcome]);
   const approvals = constraints.filter(isApprovalRequirement);
 
   return normalizeContract({

@@ -88,6 +88,11 @@ Decorated, compound, prefixed, and negated names such as `Inputs (required)`,
 `Inputs and constraints`, `Pre-verification`, and `Non-inputs` intentionally do
 not route content into contract fields.
 
+Side-effect detection evaluates the requested outcome, action sections, and
+constraints that combine an approval guard with an action. Input/context and
+verification items describe data and checks, so noun-only values such as
+`Email address` do not become requested side effects.
+
 Content inside valid
 CommonMark-style backtick or tilde fenced code blocks is treated as an example,
 not executable brief content, so it is excluded from item, side-effect, approval,

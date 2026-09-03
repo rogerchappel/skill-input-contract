@@ -12,7 +12,9 @@ before normalization:
 - `inputs` (string[]): required or available inputs; defaults to `[]`
 - `constraints` (string[]): operational and safety boundaries; defaults to `[]`
 - `requestedActions` (string[]): expected work steps; defaults to `[]`
-- `sideEffects` (string[]): requested actions that may affect external systems; defaults to `[]`
+- `sideEffects` (string[]): requested actions that may affect external systems;
+  Markdown detection uses the outcome, action sections, and action-bearing
+  constraints, but not input/context or verification items; defaults to `[]`
 - `approvalsRequired` (string[]): approval constraints found in the brief; defaults to `[]`
 - `openQuestions` (string[]): unresolved questions found in the brief; defaults to `[]`
 - `verification` (string[]): checks expected before completion; defaults to `[]`
