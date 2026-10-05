@@ -6,4 +6,4 @@
 - [x] Add CLI report formats
 - [x] Add fixture-backed tests
 - [x] Document skill workflow
-- [ ] Add adapters for issue templates and PR descriptions
+- [x] Document issue-template and PR-description adapter contracts with parser fixtures
