@@ -36,6 +36,8 @@ schema errors. Schema errors identify the invalid field on stderr without a
 stack trace or partial report. It exits with `2` when a well-formed contract has
 blocking findings, making it suitable for preflight scripts. Exact JSON input
 field types and defaults are documented in [the contract schema](docs/CONTRACT_SCHEMA.md).
+Guidance and expected parser behavior for GitHub issue templates and pull request
+descriptions are in the [adapter guide](docs/ADAPTERS.md).
 
 ## Safety Notes
 
