@@ -5,7 +5,7 @@ Generate a local, machine-checkable input contract before an agent starts work.
 ## Quickstart
 
 ```bash
-npm install
+npm ci
 npm run smoke
 node src/cli.js fixtures/task-brief.md --format json
 ```
