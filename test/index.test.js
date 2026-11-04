@@ -786,3 +786,21 @@ test('CLI renders the valid JSON fixture in both report formats', () => {
     assert.match(result.stdout, format === 'json' ? /"score": 100/ : /# Validate release notes/);
   }
 });
+
+
+test('issue and pull request adapter fixtures map documented sections', () => {
+  const cases = [
+    ['issue.md', 'Validate imported issue'],
+    ['pull-request.md', 'Update parser documentation']
+  ];
+  for (const [file, title] of cases) {
+    const source = `docs/fixtures/adapters/${file}`;
+    const contract = parseTaskBrief(fs.readFileSync(source, 'utf8'), source);
+    assert.equal(contract.title, title);
+    assert.ok(contract.inputs.length > 0);
+    assert.ok(contract.requestedActions.length > 0);
+    assert.ok(contract.verification.length > 0);
+    assert.deepEqual(contract.sideEffects, []);
+    assert.notEqual(validateContract(contract).status, 'fail');
+  }
+});
