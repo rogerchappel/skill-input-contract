@@ -2,6 +2,10 @@
 
 Generate a local, machine-checkable input contract before an agent starts work.
 
+## Requirements
+
+Node.js 20 through 24 is supported (`>=20 <25`). The CI matrix tests Node.js 20, 22, and 24. Later major versions are unsupported until explicitly added to the tested range.
+
 ## Quickstart
 
 ```bash
