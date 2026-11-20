@@ -726,6 +726,37 @@ test('parses a valid JSON contract and defaults omitted fields', () => {
   assert.equal(validateContract(contract).status, 'pass');
 });
 
+test('CLI accepts a UTF-8 BOM before JSON contracts without changing ordinary parsing', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-input-contract-'));
+  const regular = path.join(directory, 'regular.json');
+  const bomPrefixed = path.join(directory, 'bom-prefixed.json');
+  const contract = JSON.stringify({
+    title: 'JSON brief',
+    outcome: 'Validate the supplied task brief.',
+    inputs: ['brief.json'],
+    verification: ['Run the release checks']
+  });
+  fs.writeFileSync(regular, contract);
+  fs.writeFileSync(bomPrefixed, `\uFEFF${contract}`, 'utf8');
+
+  try {
+    const ordinary = spawnSync(process.execPath, ['src/cli.js', regular], { encoding: 'utf8' });
+    const prefixed = spawnSync(process.execPath, ['src/cli.js', bomPrefixed], { encoding: 'utf8' });
+
+    assert.equal(ordinary.status, 0, ordinary.stderr);
+    assert.equal(prefixed.status, 0, prefixed.stderr);
+    const ordinaryContract = JSON.parse(ordinary.stdout).contract;
+    const prefixedContract = JSON.parse(prefixed.stdout).contract;
+    assert.equal(prefixedContract.source, bomPrefixed);
+    assert.equal(ordinaryContract.source, regular);
+    delete ordinaryContract.source;
+    delete prefixedContract.source;
+    assert.deepEqual(prefixedContract, ordinaryContract);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('preserves escaped carriage returns in JSON string values', () => {
   const contract = parseTaskBrief(JSON.stringify({
     title: 'JSON brief',
