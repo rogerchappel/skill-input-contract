@@ -58,7 +58,7 @@ export function parseTaskBrief(text, source = 'inline') {
   const input = String(text || '');
   if (!input.trim()) throw new Error('Task brief is empty');
   if (source.endsWith('.json')) {
-    const contract = JSON.parse(input);
+    const contract = JSON.parse(input.replace(/^\uFEFF/, ''));
     validateJsonContract(contract);
     return normalizeContract(contract, source);
   }
