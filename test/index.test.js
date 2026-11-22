@@ -147,6 +147,30 @@ still fenced?
   assert.deepEqual(contract.openQuestions, []);
 });
 
+test('documents the supported external-action vocabulary and leaves unlisted terms outside scope', () => {
+  const supported = [
+    'send', 'sends', 'sending', 'sent', 'post', 'posts', 'posted', 'posting',
+    'publish', 'publishes', 'published', 'publishing', 'delete', 'deletes', 'deleted', 'deleting',
+    'push', 'pushes', 'pushed', 'pushing', 'merge', 'merges', 'merged', 'merging',
+    'email', 'emails', 'emailed', 'emailing', 'notify', 'notifies', 'notified', 'notifying',
+    'upload', 'uploads', 'uploaded', 'uploading'
+  ];
+  for (const action of supported) {
+    const contract = parseTaskBrief(`# Action\n\n## Outcome\n\n${action} the report.\n\n## Inputs\n\n- Report\n\n## Verification\n\n- Check the report`);
+    assert.equal(contract.sideEffects.length, 1, `${action} should be detected`);
+  }
+
+  for (const action of ['ship', 'shipped', 'shipping', 'transfer', 'transferred']) {
+    const contract = parseTaskBrief(`# Action\n\n## Outcome\n\n${action} the report.\n\n## Inputs\n\n- Report\n\n## Verification\n\n- Check the report`);
+    assert.deepEqual(contract.sideEffects, [], `${action} is intentionally outside the current vocabulary`);
+  }
+
+  for (const action of ['send', 'posted', 'uploading']) {
+    const contract = parseTaskBrief(`# Action\n\n## Outcome\n\nDo not ${action} the report.\n\n## Inputs\n\n- Report\n\n## Verification\n\n- Check the report`);
+    assert.deepEqual(contract.sideEffects, [], `negated ${action} must not be detected`);
+  }
+});
+
 test('fails when side effects lack approvals', () => {
   const contract = parseTaskBrief(fs.readFileSync('fixtures/missing-approval.md', 'utf8'), 'fixtures/missing-approval.md');
   const result = validateContract(contract);
