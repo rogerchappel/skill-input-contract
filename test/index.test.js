@@ -796,6 +796,22 @@ test('rejects non-object JSON contracts', () => {
   }
 });
 
+test('JSON validation ignores inherited scalar and collection properties', () => {
+  for (const key of ['constructor', 'toString', 'hasOwnProperty']) {
+    const inherited = Object.create({ [key]: 42 });
+    assert.doesNotThrow(() => parseTaskBrief(JSON.stringify(inherited), 'brief.json'));
+
+    const inheritedCollection = Object.create({ [key]: 'not-an-array' });
+    assert.doesNotThrow(() => parseTaskBrief(JSON.stringify(inheritedCollection), 'brief.json'));
+  }
+
+  assert.doesNotThrow(() => parseTaskBrief(JSON.stringify({
+    title: 'JSON brief',
+    outcome: 'Validate the supplied task brief.',
+    inputs: ['brief.json']
+  }), 'brief.json'));
+});
+
 test('rejects wrong JSON scalar field types', () => {
   for (const field of ['source', 'title', 'outcome']) {
     assert.throws(

@@ -259,12 +259,12 @@ function validateJsonContract(contract) {
     throw new Error('Invalid JSON contract: expected an object');
   }
   for (const field of JSON_SCALAR_FIELDS) {
-    if (field in contract && typeof contract[field] !== 'string') {
+    if (Object.hasOwn(contract, field) && typeof contract[field] !== 'string') {
       throw new Error(`Invalid JSON contract field "${field}": expected a string`);
     }
   }
   for (const field of JSON_COLLECTION_FIELDS) {
-    if (!(field in contract)) continue;
+    if (!Object.hasOwn(contract, field)) continue;
     if (!Array.isArray(contract[field])) {
       throw new Error(`Invalid JSON contract field "${field}": expected an array of strings`);
     }
