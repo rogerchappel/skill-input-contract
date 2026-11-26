@@ -12,6 +12,26 @@ function run(args) {
   return spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
 }
 
+test('accepts help only by itself and rejects combinations before file access', () => {
+  const help = run(['--help']);
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /^Usage:/);
+  assert.equal(help.stderr, '');
+
+  for (const args of [
+    ['--help', path.resolve('fixtures/does-not-exist.md')],
+    ['--help', '--format', 'json'],
+    ['--help', '--output', path.join(os.tmpdir(), 'must-not-be-created.json')]
+  ]) {
+    const result = run(args);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /--help cannot be combined with other arguments/);
+    assert.match(result.stderr, /Usage:/);
+    assert.doesNotMatch(result.stderr, /does-not-exist/);
+  }
+});
+
 test('accepts format options before or after the positional input', () => {
   for (const args of [
     ['--format', 'markdown', fixture],

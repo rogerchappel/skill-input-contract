@@ -5,13 +5,13 @@ import fs from 'node:fs';
 const args = process.argv.slice(2);
 const usage = 'Usage: skill-input-contract <brief.md|brief.json> [--format json|markdown] [--output <path>]';
 
-if (args.includes('--help')) {
-  console.log(usage);
-  process.exit(0);
-}
-
 let options;
 try {
+  if (args.includes('--help')) {
+    if (args.length !== 1) throw new Error('--help cannot be combined with other arguments');
+    console.log(usage);
+    process.exit(0);
+  }
   options = parseArgs(args);
 } catch (error) {
   console.error(`skill-input-contract: ${error.message}`);
